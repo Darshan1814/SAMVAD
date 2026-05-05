@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const MONGODB_URI = 'mongodb+srv://202301040255_db_user:JSBhugcSbkw4uCjD@cluster01.v7kftdq.mongodb.net/samvada?retryWrites=true&w=majority';
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://202301040255_db_user:JSBhugcSbkw4uCjD@cluster01.v7kftdq.mongodb.net/samvada?retryWrites=true&w=majority';
 
 const ProjectSchema = new mongoose.Schema({
   name: String,
