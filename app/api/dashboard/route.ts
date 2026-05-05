@@ -1,25 +1,24 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import connectDB from '@/lib/mongodb';
+import { Project, Candidate, ExperimentOutcome, ModelCheckpoint } from '@/lib/models';
 
 export async function GET() {
   try {
-    const project = await prisma.project.findFirst();
-    const candidatesCount = await prisma.candidate.count({ where: { projectId: project?.id } });
-    const outcomesCount = await prisma.experimentOutcome.count();
-    const checkpoint = await prisma.modelCheckpoint.findFirst({
-      where: { status: 'ACTIVE' },
-      orderBy: { trainedAt: 'desc' },
-    });
+    await connectDB();
+    
+    const project = await Project.findOne();
+    const candidatesCount = await Candidate.countDocuments({ projectId: project?._id });
+    const outcomesCount = await ExperimentOutcome.countDocuments();
+    const checkpoint = await ModelCheckpoint.findOne({ status: 'ACTIVE' }).sort({ trainedAt: -1 });
 
-    const recentOutcomes = await prisma.experimentOutcome.findMany({
-      take: 5,
-      orderBy: { loggedAt: 'desc' },
-      include: { candidate: true },
-    });
+    const recentOutcomes = await ExperimentOutcome.find()
+      .sort({ loggedAt: -1 })
+      .limit(5)
+      .populate('candidateId');
 
-    const chartData = recentOutcomes.map(o => ({
-      name: o.candidate.name.substring(0, 10),
-      predicted: o.candidate.predictedSelectivity,
+    const chartData = recentOutcomes.map((o: any) => ({
+      name: o.candidateId?.name?.substring(0, 10) || 'Unknown',
+      predicted: o.candidateId?.predictedSelectivity || 0,
       actual: o.actualSelectivity,
     })).reverse();
 

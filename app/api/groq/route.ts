@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { generateCandidates, runResidualAnalysis, simulateRetrain } from '@/lib/groq';
-import { prisma } from '@/lib/prisma';
+import connectDB from '@/lib/mongodb';
+import { Project, Candidate, ResidualAnalysis, ModelCheckpoint } from '@/lib/models';
 
 export async function POST(request: NextRequest) {
   try {
+    await connectDB();
     const { action, data, apiKey } = await request.json();
 
     if (!apiKey) {
@@ -13,26 +15,24 @@ export async function POST(request: NextRequest) {
     if (action === 'generateCandidates') {
       const candidates = await generateCandidates(apiKey, data);
       
-      const project = await prisma.project.findFirst();
+      const project = await Project.findOne();
       if (project) {
         for (const candidate of candidates) {
           const perfScore = (candidate.predictedActivity * 0.4 + candidate.predictedSelectivity * 0.4 + candidate.predictedStability * 0.2) / 1.5;
           const procScore = Math.floor(Math.random() * 30) + 40;
           
-          await prisma.candidate.create({
-            data: {
-              projectId: project.id,
-              name: candidate.name,
-              formula: candidate.formula,
-              type: 'NOVEL',
-              performanceScore: Math.round(perfScore * 10) / 10,
-              procurementScore: procScore,
-              predictedActivity: candidate.predictedActivity,
-              predictedSelectivity: candidate.predictedSelectivity,
-              predictedStability: candidate.predictedStability,
-              failureRiskTags: JSON.stringify(candidate.failureRiskTags),
-              source: 'AI-generated (Groq)',
-            },
+          await Candidate.create({
+            projectId: project._id,
+            name: candidate.name,
+            formula: candidate.formula,
+            type: 'NOVEL',
+            performanceScore: Math.round(perfScore * 10) / 10,
+            procurementScore: procScore,
+            predictedActivity: candidate.predictedActivity,
+            predictedSelectivity: candidate.predictedSelectivity,
+            predictedStability: candidate.predictedStability,
+            failureRiskTags: JSON.stringify(candidate.failureRiskTags),
+            source: 'AI-generated (Groq)',
           });
         }
       }
@@ -43,21 +43,16 @@ export async function POST(request: NextRequest) {
     if (action === 'runResidualAnalysis') {
       const analysis = await runResidualAnalysis(apiKey, data.underperformers);
       
-      const project = await prisma.project.findFirst();
-      const checkpoint = await prisma.modelCheckpoint.findFirst({
-        where: { status: 'ACTIVE' },
-        orderBy: { trainedAt: 'desc' },
-      });
+      const project = await Project.findOne();
+      const checkpoint = await ModelCheckpoint.findOne({ status: 'ACTIVE' }).sort({ trainedAt: -1 });
 
       if (project && checkpoint) {
-        await prisma.residualAnalysis.create({
-          data: {
-            projectId: project.id,
-            hypothesis: analysis.hypothesis,
-            shapFeatures: JSON.stringify(analysis.shapFeatures),
-            underperformers: JSON.stringify(data.underperformers),
-            checkpointVersion: checkpoint.version,
-          },
+        await ResidualAnalysis.create({
+          projectId: project._id,
+          hypothesis: analysis.hypothesis,
+          shapFeatures: JSON.stringify(analysis.shapFeatures),
+          underperformers: JSON.stringify(data.underperformers),
+          checkpointVersion: checkpoint.version,
         });
       }
 

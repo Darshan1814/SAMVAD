@@ -1,23 +1,21 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import connectDB from '@/lib/mongodb';
+import { ExperimentOutcome, ModelCheckpoint, RetrainLog } from '@/lib/models';
 
 export async function GET() {
   try {
-    const outcomes = await prisma.experimentOutcome.count();
-    const checkpoint = await prisma.modelCheckpoint.findFirst({
-      where: { status: 'ACTIVE' },
-      orderBy: { trainedAt: 'desc' },
-    });
+    await connectDB();
+    
+    const outcomes = await ExperimentOutcome.countDocuments();
+    const checkpoint = await ModelCheckpoint.findOne({ status: 'ACTIVE' }).sort({ trainedAt: -1 });
+    const lastRetrain = await RetrainLog.findOne().sort({ triggeredAt: -1 });
 
-    const lastRetrain = await prisma.retrainLog.findFirst({
-      orderBy: { triggeredAt: 'desc' },
-    });
-
-    const countSinceRetrain = lastRetrain 
-      ? await prisma.experimentOutcome.count({
-          where: { loggedAt: { gte: lastRetrain.triggeredAt } }
-        })
-      : outcomes;
+    let countSinceRetrain = outcomes;
+    if (lastRetrain) {
+      countSinceRetrain = await ExperimentOutcome.countDocuments({
+        loggedAt: { $gte: lastRetrain.triggeredAt }
+      });
+    }
 
     return NextResponse.json({
       count: countSinceRetrain,

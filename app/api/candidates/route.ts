@@ -1,9 +1,13 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import connectDB from '@/lib/mongodb';
+import { Candidate } from '@/lib/models';
 
 export async function GET() {
-  const candidates = await prisma.candidate.findMany({
-    orderBy: { createdAt: 'desc' },
-  });
-  return NextResponse.json(candidates);
+  try {
+    await connectDB();
+    const candidates = await Candidate.find().sort({ createdAt: -1 });
+    return NextResponse.json(candidates);
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
 }

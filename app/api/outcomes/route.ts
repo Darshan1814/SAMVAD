@@ -1,28 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import connectDB from '@/lib/mongodb';
+import { Candidate, ExperimentOutcome } from '@/lib/models';
 
 export async function POST(request: NextRequest) {
   try {
+    await connectDB();
     const data = await request.json();
     
-    const candidate = await prisma.candidate.findUnique({
-      where: { id: data.candidateId },
-    });
-
+    const candidate = await Candidate.findById(data.candidateId);
     if (!candidate) {
       return NextResponse.json({ error: 'Candidate not found' }, { status: 404 });
     }
 
-    const outcome = await prisma.experimentOutcome.create({
-      data: {
-        candidateId: data.candidateId,
-        actualYield: parseFloat(data.actualYield),
-        actualSelectivity: parseFloat(data.actualSelectivity),
-        actualStability: parseFloat(data.actualStability),
-        result: data.result,
-        voiceNote: data.voiceNote,
-        loggedBy: data.loggedBy,
-      },
+    const outcome = await ExperimentOutcome.create({
+      candidateId: data.candidateId,
+      actualYield: parseFloat(data.actualYield),
+      actualSelectivity: parseFloat(data.actualSelectivity),
+      actualStability: parseFloat(data.actualStability),
+      result: data.result,
+      voiceNote: data.voiceNote,
+      loggedBy: data.loggedBy,
     });
 
     const diff = {

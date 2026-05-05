@@ -1,9 +1,11 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import connectDB from '@/lib/mongodb';
+import { Project } from '@/lib/models';
 
 export async function GET() {
   try {
-    const project = await prisma.project.findFirst();
+    await connectDB();
+    const project = await Project.findOne();
     return NextResponse.json(project);
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });

@@ -1,19 +1,11 @@
 [phases.setup]
-nixPkgs = ["nodejs_20", "openssl"]
+nixPkgs = ["nodejs_20"]
 
 [phases.install]
 cmds = ["npm install --legacy-peer-deps"]
 
 [phases.build]
-cmds = [
-  "export DATABASE_URL=file:./prisma/dev.db",
-  "npx prisma generate",
-  "npx prisma migrate deploy",
-  "npm run build"
-]
+cmds = ["npm run build"]
 
 [start]
 cmd = "npm start"
-
-[variables]
-DATABASE_URL = "file:./prisma/dev.db"

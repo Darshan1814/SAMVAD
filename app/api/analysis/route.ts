@@ -1,23 +1,21 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import connectDB from '@/lib/mongodb';
+import { ExperimentOutcome, ResidualAnalysis } from '@/lib/models';
 
 export async function GET() {
   try {
-    const outcomes = await prisma.experimentOutcome.findMany({
-      where: { result: 'UNDERPERFORMED' },
-      include: { candidate: true },
-    });
+    await connectDB();
+    
+    const outcomes = await ExperimentOutcome.find({ result: 'UNDERPERFORMED' }).populate('candidateId');
 
-    const underperformers = outcomes.map(o => ({
-      name: o.candidate.name,
-      predicted: o.candidate.predictedSelectivity,
+    const underperformers = outcomes.map((o: any) => ({
+      name: o.candidateId?.name || 'Unknown',
+      predicted: o.candidateId?.predictedSelectivity || 0,
       actual: o.actualSelectivity,
-      gap: Math.round((o.actualSelectivity - o.candidate.predictedSelectivity) * 10) / 10,
+      gap: Math.round((o.actualSelectivity - (o.candidateId?.predictedSelectivity || 0)) * 10) / 10,
     }));
 
-    const latestAnalysis = await prisma.residualAnalysis.findFirst({
-      orderBy: { runAt: 'desc' },
-    });
+    const latestAnalysis = await ResidualAnalysis.findOne().sort({ runAt: -1 });
 
     let parsedAnalysis = null;
     if (latestAnalysis) {
