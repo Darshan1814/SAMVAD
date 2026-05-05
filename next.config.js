@@ -7,6 +7,10 @@ const nextConfig = {
       bodySizeLimit: '2mb',
     },
   },
+  // Ensure proper port binding for Railway
+  serverRuntimeConfig: {
+    port: process.env.PORT || 3000,
+  },
 }
 
 module.exports = nextConfig

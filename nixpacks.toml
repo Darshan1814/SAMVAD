@@ -14,3 +14,6 @@ cmds = [
 
 [start]
 cmd = "npm start"
+
+[variables]
+DATABASE_URL = "file:./prisma/dev.db"
