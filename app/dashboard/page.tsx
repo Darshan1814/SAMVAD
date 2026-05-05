@@ -16,7 +16,7 @@ export default function Dashboard() {
   });
 
   useEffect(() => {
-    fetch('/api/dashboard')
+    fetch('/api/dashboard', { cache: 'no-store' })
       .then(res => res.json())
       .then(setData);
   }, []);
@@ -25,7 +25,7 @@ export default function Dashboard() {
     <div className="p-4 sm:p-6 lg:p-8">
       <div className="mb-6 lg:mb-8">
         <h1 className="text-2xl sm:text-3xl font-bold mb-2">Dashboard</h1>
-        <p className="text-sm sm:text-base text-foreground/60">{data.project?.name}</p>
+        <p className="text-sm sm:text-base text-foreground/60">{data.project?.name || 'No Active Campaign'}</p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 lg:mb-8">
