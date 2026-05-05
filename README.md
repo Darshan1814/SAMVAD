@@ -32,19 +32,21 @@ npx prisma migrate dev
 npx tsx prisma/seed.ts
 ```
 
-### 3. Run Development Server
+### 3. Configure Groq API Key
+
+The Groq API key is already configured in `.env.local`. No additional setup needed!
+
+Alternatively, you can:
+1. Navigate to Settings in the app
+2. Enter your own API key and save
+
+### 4. Run Development Server
 
 ```bash
 npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
-
-### 4. Configure Groq API Key
-
-1. Get your API key from [console.groq.com](https://console.groq.com)
-2. Navigate to Settings in the app
-3. Enter your API key and save
 
 ---
 

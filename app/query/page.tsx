@@ -20,9 +20,9 @@ export default function QueryPage() {
     setResults([]);
 
     try {
-      const apiKey = localStorage.getItem('groqApiKey');
+      const apiKey = process.env.NEXT_PUBLIC_GROQ_API_KEY || localStorage.getItem('groqApiKey');
       if (!apiKey) {
-        alert('Please add your Groq API key in Settings');
+        alert('Groq API key not configured');
         setLoading(false);
         return;
       }

@@ -10,7 +10,12 @@ export default function SettingsPage() {
 
   useEffect(() => {
     const storedKey = localStorage.getItem('groqApiKey');
-    if (storedKey) setApiKey(storedKey);
+    const envKey = process.env.NEXT_PUBLIC_GROQ_API_KEY;
+    if (storedKey) {
+      setApiKey(storedKey);
+    } else if (envKey) {
+      setApiKey(envKey);
+    }
 
     fetch('/api/project')
       .then(res => res.json())
@@ -48,8 +53,12 @@ export default function SettingsPage() {
             <h2 className="text-base sm:text-lg font-semibold">Groq API Key</h2>
           </div>
           <p className="text-xs sm:text-sm text-foreground/60 mb-4">
-            Required for AI-powered candidate generation, residual analysis, and retrain simulation.
-            Get your API key from <a href="https://console.groq.com" target="_blank" className="text-saffron hover:underline">console.groq.com</a>
+            {process.env.NEXT_PUBLIC_GROQ_API_KEY ? (
+              <span className="text-green-400">✓ API key configured via environment variable</span>
+            ) : (
+              <>Required for AI-powered candidate generation, residual analysis, and retrain simulation.
+              Get your API key from <a href="https://console.groq.com" target="_blank" className="text-saffron hover:underline">console.groq.com</a></>
+            )}
           </p>
           <div className="flex flex-col sm:flex-row gap-3">
             <input
@@ -58,16 +67,18 @@ export default function SettingsPage() {
               onChange={(e) => setApiKey(e.target.value)}
               className="flex-1 bg-background border border-border rounded px-4 py-2 font-mono text-sm"
               placeholder="gsk_..."
+              disabled={!!process.env.NEXT_PUBLIC_GROQ_API_KEY}
             />
             <button
               onClick={saveApiKey}
-              className="flex items-center justify-center gap-2 px-4 py-2 bg-saffron text-background rounded hover:bg-saffron/90 transition-colors w-full sm:w-auto"
+              disabled={!!process.env.NEXT_PUBLIC_GROQ_API_KEY}
+              className="flex items-center justify-center gap-2 px-4 py-2 bg-saffron text-background rounded hover:bg-saffron/90 transition-colors w-full sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Save size={18} />
               {saved ? 'Saved!' : 'Save'}
             </button>
           </div>
-          {!apiKey && (
+          {!apiKey && !process.env.NEXT_PUBLIC_GROQ_API_KEY && (
             <div className="mt-4 p-3 bg-yellow-500/10 border border-yellow-500/50 rounded text-xs sm:text-sm">
               Add your Groq API key to enable AI features
             </div>
