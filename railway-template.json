@@ -1,0 +1,34 @@
+{
+  "name": "SAMVĀDA - AI Catalyst Discovery",
+  "description": "Closed-loop AI discovery engine for catalysts and engineered biological pathways. Built for India's sustainable fuel transition (Ethanol-to-Jet programme).",
+  "repository": "https://github.com/YOUR_USERNAME/SAMVADA",
+  "keywords": [
+    "nextjs",
+    "ai",
+    "catalyst",
+    "groq",
+    "prisma",
+    "sqlite",
+    "machine-learning",
+    "chemistry"
+  ],
+  "env": {
+    "NEXT_PUBLIC_GROQ_API_KEY": {
+      "description": "Groq API key for AI features (get from console.groq.com)",
+      "required": true
+    },
+    "DATABASE_URL": {
+      "description": "SQLite database URL",
+      "value": "file:./prisma/dev.db",
+      "required": false
+    },
+    "NODE_ENV": {
+      "description": "Node environment",
+      "value": "production",
+      "required": false
+    }
+  },
+  "build": {
+    "builder": "NIXPACKS"
+  }
+}

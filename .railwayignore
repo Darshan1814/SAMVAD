@@ -1,0 +1,25 @@
+# Development files
+.env.local
+.env.development
+
+# Node modules (will be installed during build)
+node_modules/
+
+# Next.js
+.next/
+
+# Testing
+coverage/
+
+# Misc
+.DS_Store
+*.log
+
+# Documentation (optional - remove if you want docs deployed)
+GETTING_STARTED.md
+TROUBLESHOOTING.md
+DEMO_SCRIPT.md
+PROJECT_OVERVIEW.md
+RESPONSIVE_DESIGN.md
+API_KEY_SETUP.md
+READY_TO_USE.md
