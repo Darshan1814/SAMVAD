@@ -1,70 +1,45 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { generateCandidates, runResidualAnalysis, simulateRetrain } from '@/lib/groq';
-import connectDB from '@/lib/mongodb';
-import { Project, Candidate, ResidualAnalysis, ModelCheckpoint } from '@/lib/models';
+import { NextResponse } from 'next/server';
+import { 
+  scoreSynthesizability, 
+  tagFailureModes, 
+  optimizeLeadTime, 
+  predictOptimalConditions, 
+  structureVoiceObservations 
+} from '@/lib/groq';
+import { HARDCODED_SUPPLIERS } from '@/lib/data/hardcoded_entries';
 
-export async function POST(request: NextRequest) {
+const API_KEY = process.env.NEXT_PUBLIC_GROQ_API_KEY || '';
+
+export async function POST(req: Request) {
   try {
-    await connectDB();
-    const { action, data, apiKey } = await request.json();
+    const { tool, payload } = await req.json();
 
-    if (!apiKey) {
-      return NextResponse.json({ error: 'API key required' }, { status: 400 });
+    if (!API_KEY) {
+      return NextResponse.json({ error: 'Groq API Key not found in environment' }, { status: 500 });
     }
 
-    if (action === 'generateCandidates') {
-      const candidates = await generateCandidates(apiKey, data);
-      
-      const project = await Project.findOne();
-      if (project) {
-        for (const candidate of candidates) {
-          const perfScore = (candidate.predictedActivity * 0.4 + candidate.predictedSelectivity * 0.4 + candidate.predictedStability * 0.2) / 1.5;
-          const procScore = Math.floor(Math.random() * 30) + 40;
-          
-          await Candidate.create({
-            projectId: project._id,
-            name: candidate.name,
-            formula: candidate.formula,
-            type: 'NOVEL',
-            performanceScore: Math.round(perfScore * 10) / 10,
-            procurementScore: procScore,
-            predictedActivity: candidate.predictedActivity,
-            predictedSelectivity: candidate.predictedSelectivity,
-            predictedStability: candidate.predictedStability,
-            failureRiskTags: JSON.stringify(candidate.failureRiskTags),
-            source: 'AI-generated (Groq)',
-          });
-        }
-      }
-
-      return NextResponse.json({ candidates });
+    let result;
+    switch (tool) {
+      case 'synthesizability':
+        result = await scoreSynthesizability(API_KEY, payload.formula, HARDCODED_SUPPLIERS);
+        break;
+      case 'failure-tagger':
+        result = await tagFailureModes(API_KEY, payload.notes);
+        break;
+      case 'lead-time':
+        result = await optimizeLeadTime(API_KEY, payload.precursors, HARDCODED_SUPPLIERS);
+        break;
+      case 'condition-predictor':
+        result = await predictOptimalConditions(API_KEY, payload.formula, payload.target);
+        break;
+      case 'voice-structurer':
+        result = await structureVoiceObservations(API_KEY, payload.transcript, payload.language);
+        break;
+      default:
+        return NextResponse.json({ error: 'Invalid tool' }, { status: 400 });
     }
 
-    if (action === 'runResidualAnalysis') {
-      const analysis = await runResidualAnalysis(apiKey, data.underperformers);
-      
-      const project = await Project.findOne();
-      const checkpoint = await ModelCheckpoint.findOne({ status: 'ACTIVE' }).sort({ trainedAt: -1 });
-
-      if (project && checkpoint) {
-        await ResidualAnalysis.create({
-          projectId: project._id,
-          hypothesis: analysis.hypothesis,
-          shapFeatures: JSON.stringify(analysis.shapFeatures),
-          underperformers: JSON.stringify(data.underperformers),
-          checkpointVersion: checkpoint.version,
-        });
-      }
-
-      return NextResponse.json({ analysis });
-    }
-
-    if (action === 'simulateRetrain') {
-      const result = await simulateRetrain(apiKey, data.newPoints, data.currentVersion);
-      return NextResponse.json({ result });
-    }
-
-    return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
+    return NextResponse.json(result);
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

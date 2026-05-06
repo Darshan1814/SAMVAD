@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, Search, MapPin, Clock } from 'lucide-react';
+import { HARDCODED_SUPPLIERS } from '@/lib/data/hardcoded_entries';
 
 type Supplier = {
   id: string;
@@ -24,14 +25,11 @@ export default function RegistryPage() {
   });
 
   useEffect(() => {
-    loadSuppliers();
+    setSuppliers(HARDCODED_SUPPLIERS.map((s, i) => ({
+      id: `reg-${i}`,
+      ...s
+    })));
   }, []);
-
-  const loadSuppliers = async () => {
-    const res = await fetch('/api/registry');
-    const data = await res.json();
-    setSuppliers(data);
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

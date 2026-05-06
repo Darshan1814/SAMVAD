@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Filter } from 'lucide-react';
+import { Filter, Beaker, Search, TrendingUp } from 'lucide-react';
+import { HARDCODED_CANDIDATES } from '@/lib/data/hardcoded_entries';
 
 type Candidate = {
   id: string;
@@ -24,9 +25,14 @@ export default function CandidatesPage() {
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
 
   useEffect(() => {
-    fetch('/api/candidates')
-      .then(res => res.json())
-      .then(data => setCandidates(data));
+    setCandidates(HARDCODED_CANDIDATES.map((c, i) => ({
+      id: `cand-${i}`,
+      ...c,
+      predictedActivity: c.performanceScore + 5,
+      predictedSelectivity: c.performanceScore - 5,
+      predictedStability: 120 + Math.random() * 80,
+      failureRiskTags: JSON.stringify(['coking', 'sintering'])
+    })));
   }, []);
 
   const filtered = candidates
