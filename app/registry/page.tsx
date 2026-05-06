@@ -33,14 +33,15 @@ export default function RegistryPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await fetch('/api/registry', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(formData),
-    });
+    // In demo mode, we just update local state or show success
+    const newEntry = {
+      id: `reg-${suppliers.length}`,
+      ...formData,
+      leadTimeDays: Number(formData.leadTimeDays)
+    };
+    setSuppliers([newEntry, ...suppliers]);
     setFormData({ precursorName: '', supplier: '', leadTimeDays: '', available: true, region: '' });
     setShowForm(false);
-    loadSuppliers();
   };
 
   return (
